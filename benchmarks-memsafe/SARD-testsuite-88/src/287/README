@@ -1,0 +1,12 @@
+For more details, see the paper "Testing Static Analysis Tools Using
+Exploitable Overflows From Open Source Code", Misha Zitser, Richard Lippmann,
+and Tim Leek.
+
+COMPILING
+make clean
+make
+
+RUNNING TEST CASES
+run with:     mapped-path-bad pathfile
+result:       path gets overflowed in do_elem. 29 bytes written into it when it is only 10 bytes.  canary (an int) which is just above path on the stack, gets clobbered
+

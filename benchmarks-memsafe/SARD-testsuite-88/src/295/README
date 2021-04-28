@@ -1,0 +1,11 @@
+For more details, see the paper "Testing Static Analysis Tools Using
+Exploitable Overflows From Open Source Code", Misha Zitser, Richard Lippmann,
+and Tim Leek.
+
+COMPILING
+make clean
+make
+
+RUNNING TEST CASES
+run with:     iquery-bad b3.in
+result:       memcpy 27 bytes into anbuf in req_iquery, triggering a segmentation fault

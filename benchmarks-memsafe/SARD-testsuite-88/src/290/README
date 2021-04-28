@@ -1,0 +1,12 @@
+For more details, see the paper "Testing Static Analysis Tools Using
+Exploitable Overflows From Open Source Code", Misha Zitser, Richard Lippmann,
+and Tim Leek.
+
+COMPILING
+make clean
+make
+
+RUNNING TEST CASES
+run with:     ns-lookup-ok b4.in
+result:       =999 bytes is always sprintf-ed into buf.
+

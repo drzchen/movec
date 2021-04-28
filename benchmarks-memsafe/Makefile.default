@@ -1,0 +1,111 @@
+# The make command can set the following variables, e.g., make "VAR=val".
+# MOVEC_OPTS: options appended to the tool command.
+# ASAN_OPTS: options appended to the tool command.
+# SOCETS_OPTS: options appended to the tool command.
+# VALGD_OPTS: options appended to the tool command.
+# O: the optimization level for the default compiler, e.g., O=-O3.
+
+# The parent Makefile can set the following variables:
+# TOOLNAME: the name of the tool being used.
+#   This is also the name of the generated output directory.
+# INSTRU_CC: the compiler used to build instrumented programs.
+#   It should be set if you want to use a compile-time instrumentation.
+#   It can be omitted if you use the default compiler - gcc.
+# INSTRU_CC_OPTS: options appended to the compiler command.
+# INSTRU_BIN: the tool used to instrument and run binary programs.
+#   It should be set if you want to use a run-time instrumentation.
+#   It can be omitted if you do not need it.
+#
+# We provide two ways of instrumentation, file-to-file and dir-to-dir.
+# Different variables should be set in the parent Makefile for the two modes.
+# Note that the first mode is used iff the SOURCES variable is set.
+### 1. file-to-file: instrument/compile/run source files one by one.
+# SOURCES: the source files to be instrumented.
+# SOURCES_WITH_ERROR: the source files whose runtime abort is ignored in make.
+#   It should be set if some program causes segmentation fault.
+# OUTPUT_PROGRAMS: the tagets to generate a program from a source file.
+#   Note that all details of these targets should be given in the parent Makefile.
+# SHOWTIME: set value YES to show the time of running a program.
+#   It can be omitted if you do not need it.
+### 2. dir-to-dir: instrument/compile/run by directory (containing Makefiles).
+# COPY_MAKEFILES: the command for copying makefiles.
+#   It can be omitted if you use the default command.
+# COPY_MORE_MAKEFILES: the additional command for copying makefiles.
+# CUSTOM_INSTRU_TARGETS: the customized instrumentation targets.
+#   Note that all details of these targets should be given in the parent Makefile.
+#
+# ERROR_FILES: the names of the files that contain reported errors.
+
+# Set the path and options of the tools
+MOVEC := movec --check-memsafe $(MOVEC_OPTS)
+ASAN := clang -fsanitize=address -fno-omit-frame-pointer $(ASAN_OPTS)
+SOCETS := $(HOME)/Downloads/softboundcets-34-master/softboundcets-llvm-clang34/Debug+Asserts/bin/clang -fsoftboundcets -L$(HOME)/Downloads/softboundcets-34-master/softboundcets-lib -lm -lsoftboundcets_rt $(SOCETS_OPTS)
+VALGD := valgrind --leak-check=full $(VALGD_OPTS)
+
+COPY := cp
+MKDIR := mkdir
+RMRF := rm -rf
+
+INPUT__DIR := ../src
+OUTPUT_DIR := ../output-$(TOOLNAME)
+INSTRU_CC ?= gcc $(O)
+COPY_MAKEFILES ?= $(COPY) ../src_makefiles/Makefile $(OUTPUT_DIR)/Makefile
+
+.PHONY: build run clean
+.SUFFIXES: # Delete the default suffixes
+
+ifneq ($(SOURCES),)
+# Mode 1: Instrument/compile/run source files one by one.
+OUTPUT_PROGRAMS := $(patsubst ../src/%.c, $(OUTPUT_DIR)/%, $(SOURCES))
+OUTPUT_FILES := $(patsubst ../src/%.c, $(OUTPUT_DIR)/%.output.txt, $(SOURCES))
+
+.IGNORE: $(patsubst %.c, $(OUTPUT_DIR)/%.output.txt, $(SOURCES_WITH_ERROR))
+
+build: $(OUTPUT_DIR) $(OUTPUT_PROGRAMS)
+	@echo "***Successfully instrumented and built all benchmarks."
+
+$(OUTPUT_DIR):
+	@$(RMRF) $(OUTPUT_DIR)
+	@$(MKDIR) $(OUTPUT_DIR)
+
+run: $(OUTPUT_FILES)
+	@../../grep_reported_errors.$(TOOLNAME).sh $(ERROR_FILES)
+
+$(OUTPUT_FILES): %.output.txt: %
+	@echo "Running" $<
+ifeq ($(SHOWTIME),YES)
+	@/usr/bin/time $(INSTRU_BIN) $< > $@ 2> $<.error.txt
+	@../../grep_time_mem.sh $<.error.txt
+else
+	@$(INSTRU_BIN) $< > $@ 2> $<.error.txt
+endif
+else
+# Mode 2: Instrument/compile/run by directory (containing Makefiles).
+ifeq ($(CUSTOM_INSTRU_TARGETS),)
+build: $(OUTPUT_DIR)
+	@export INSTRU_CC="$(INSTRU_CC) $(INSTRU_CC_OPTS)"; $(MAKE) -C $(OUTPUT_DIR)
+	@echo "***Successfully instrumented and built all benchmarks."
+
+$(OUTPUT_DIR): $(INPUT__DIR)
+	@$(RMRF) $(OUTPUT_DIR)
+	@$(COPY) -ar $(INPUT__DIR) $(OUTPUT_DIR)
+	@$(COPY_MAKEFILES)
+	@$(COPY_MORE_MAKEFILES)
+else
+build: $(OUTPUT_DIR) $(CUSTOM_INSTRU_TARGETS)
+	@echo "***Successfully instrumented and built all benchmarks."
+
+$(OUTPUT_DIR): $(INPUT__DIR)
+	@$(RMRF) $(OUTPUT_DIR)
+	@$(MKDIR) $(OUTPUT_DIR)
+	@$(COPY_MAKEFILES)
+	@$(COPY_MORE_MAKEFILES)
+endif
+
+run: build
+	@export INSTRU_BIN="$(INSTRU_BIN)"; $(MAKE) -C $(OUTPUT_DIR) run
+	@../../grep_reported_errors.$(TOOLNAME).sh $(ERROR_FILES)
+endif
+
+clean:
+	@$(RMRF) $(OUTPUT_DIR)

@@ -1,0 +1,12 @@
+For more details, see the paper "Testing Static Analysis Tools Using
+Exploitable Overflows From Open Source Code", Misha Zitser, Richard Lippmann,
+and Tim Leek.
+
+COMPILING
+make clean
+make
+
+RUNNING TEST CASES
+run with:     mime1-bad s3.in
+result:       obuf gets overflowed in function mime7to8.  canary is just above obuf on the stack, so its orginal contents, "GOOD", get replaced with overflow.  
+

@@ -1,0 +1,12 @@
+For more details, see the paper "Testing Static Analysis Tools Using
+Exploitable Overflows From Open Source Code", Misha Zitser, Richard Lippmann,
+and Tim Leek.
+
+COMPILING
+make clean
+make
+
+RUNNING TEST CASES
+run with:     crackaddr-bad < ./s1.in
+result:       test_buf gets overflowed in function crackaddr.  buf is just above test_buf on the stack, so its orginal contents, Original contents of buf, "GOOD", get replaced with overflow.
+

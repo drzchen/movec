@@ -1,0 +1,12 @@
+For more details, see the paper "Testing Static Analysis Tools Using
+Exploitable Overflows From Open Source Code", Misha Zitser, Richard Lippmann,
+and Tim Leek.
+
+COMPILING
+make clean
+make
+
+RUNNING TEST CASES
+run with:     txt-dns-file-bad
+result:       rr is a pointer to a pointer to a RESOURCE_RECORD_T.  (*rr)->rr_u.rr_txt is a buffer allocated on the heap.  .rr_txt is of size defined by the *p which is being used to parse the "data" buffer that comes in as an arg to parse_dns_reply.  A strncpy with .rr_txt as its destination uses as its third arg (specifying how many bytes to copy) the value *p which is not checked to make sure it is less than the size previously parsed out from data.  oy.  The copy causes a segmentation fault, asking to copy 255 bytes into a 100 byte buffer.
+

@@ -1,0 +1,27 @@
+DIRS-softboundcets := $(sort $(patsubst ./%/softboundcets,%/,$(shell find . -name softboundcets)))
+
+OUTPUTS-softboundcets := $(patsubst %/, %/output-softboundcets, $(DIRS-softboundcets))
+RUNS-softboundcets    := $(patsubst %/, %/run-softboundcets,    $(DIRS-softboundcets))
+CLEANS-softboundcets  := $(patsubst %/, %/clean-softboundcets,  $(DIRS-softboundcets))
+
+.PHONY: output-softboundcets run-softboundcets $(RUNS-softboundcets) clean-softboundcets $(CLEANS-softboundcets)
+
+ifneq ($(REOUTPUT),)
+.PHONY: $(OUTPUTS-softboundcets)
+endif
+
+output-softboundcets: $(OUTPUTS-softboundcets)
+
+$(OUTPUTS-softboundcets): %/output-softboundcets: %/softboundcets
+	@$(MAKE) -C $<
+
+run-softboundcets: $(RUNS-softboundcets)
+
+$(RUNS-softboundcets): %/run-softboundcets: %/output-softboundcets
+	@echo "Running" $(patsubst %/run-softboundcets, %, $@)
+	@$(MAKE) -C $(patsubst %/run-softboundcets, %/softboundcets, $@) run --no-print-directory
+
+clean-softboundcets: $(CLEANS-softboundcets)
+
+$(CLEANS-softboundcets): %/clean-softboundcets: %/softboundcets
+	@$(MAKE) -C $< clean

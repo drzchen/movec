@@ -1,0 +1,11 @@
+For more details, see the paper "Testing Static Analysis Tools Using
+Exploitable Overflows From Open Source Code", Misha Zitser, Richard Lippmann,
+and Tim Leek.
+
+COMPILING
+make clean
+make
+
+RUNNING TEST CASES
+run with:     nxt-ok
+result:       the memcpy doesn't happen because there is a check that the third arg is >= 0

@@ -1,0 +1,11 @@
+For more details, see the paper "Testing Static Analysis Tools Using
+Exploitable Overflows From Open Source Code", Misha Zitser, Richard Lippmann,
+and Tim Leek.
+
+COMPILING
+make clean
+make
+
+RUNNING TEST CASES
+run with:       sig-bad
+result:         cp1 gets overflowed in rrextract and a segmentation fault occurs when memcpy gets a negative 3rd argument.  

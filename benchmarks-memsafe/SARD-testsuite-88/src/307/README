@@ -1,0 +1,12 @@
+For more details, see the paper "Testing Static Analysis Tools Using
+Exploitable Overflows From Open Source Code", Misha Zitser, Richard Lippmann,
+and Tim Leek.
+
+COMPILING
+make clean
+make
+
+RUNNING TEST CASES
+run with:     ttflag-bad -d 4294967200-100
+result:       tTdvect, a global variable defined in my-main.c, gets underflowed in function tTflag.  No canary to view results.  tTvect is an alias for tTdvect and it is written via index first, i.e. tTvect[first++] = i.  The index first is printed out and so you can verify that it goes negative.
+

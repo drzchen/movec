@@ -1,0 +1,27 @@
+DIRS-addresssanitizer := $(sort $(patsubst ./%/addresssanitizer,%/,$(shell find . -name addresssanitizer)))
+
+OUTPUTS-addresssanitizer := $(patsubst %/, %/output-addresssanitizer, $(DIRS-addresssanitizer))
+RUNS-addresssanitizer    := $(patsubst %/, %/run-addresssanitizer,    $(DIRS-addresssanitizer))
+CLEANS-addresssanitizer  := $(patsubst %/, %/clean-addresssanitizer,  $(DIRS-addresssanitizer))
+
+.PHONY: output-addresssanitizer run-addresssanitizer $(RUNS-addresssanitizer) clean-addresssanitizer $(CLEANS-addresssanitizer)
+
+ifneq ($(REOUTPUT),)
+.PHONY: $(OUTPUTS-addresssanitizer)
+endif
+
+output-addresssanitizer: $(OUTPUTS-addresssanitizer)
+
+$(OUTPUTS-addresssanitizer): %/output-addresssanitizer: %/addresssanitizer
+	@$(MAKE) -C $<
+
+run-addresssanitizer: $(RUNS-addresssanitizer)
+
+$(RUNS-addresssanitizer): %/run-addresssanitizer: %/output-addresssanitizer
+	@echo "Running" $(patsubst %/run-addresssanitizer, %, $@)
+	@$(MAKE) -C $(patsubst %/run-addresssanitizer, %/addresssanitizer, $@) run --no-print-directory
+
+clean-addresssanitizer: $(CLEANS-addresssanitizer)
+
+$(CLEANS-addresssanitizer): %/clean-addresssanitizer: %/addresssanitizer
+	@$(MAKE) -C $< clean

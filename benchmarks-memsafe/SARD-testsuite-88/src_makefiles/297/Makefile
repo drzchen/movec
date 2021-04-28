@@ -1,0 +1,11 @@
+
+all:	crackaddr-bad
+
+clean:	
+	@rm -f *-bad *-ok *.output.txt *.error.txt
+
+crackaddr-bad: crackaddr-bad.c
+	$(INSTRU_CC) -o crackaddr-bad crackaddr-bad.c
+
+run: crackaddr-bad
+	@/usr/bin/time $(INSTRU_BIN) ./crackaddr-bad < ./s1.in > $<.output.txt 2> $<.error.txt

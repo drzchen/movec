@@ -1,0 +1,27 @@
+DIRS-movec-memsafe := $(sort $(patsubst ./%/movec-memsafe,%/,$(shell find . -name movec-memsafe)))
+
+OUTPUTS-movec-memsafe := $(patsubst %/, %/output-movec-memsafe, $(DIRS-movec-memsafe))
+RUNS-movec-memsafe    := $(patsubst %/, %/run-movec-memsafe,    $(DIRS-movec-memsafe))
+CLEANS-movec-memsafe  := $(patsubst %/, %/clean-movec-memsafe,  $(DIRS-movec-memsafe))
+
+.PHONY: output-movec-memsafe run-movec-memsafe $(RUNS-movec-memsafe) clean-movec-memsafe $(CLEANS-movec-memsafe)
+
+ifneq ($(REOUTPUT),)
+.PHONY: $(OUTPUTS-movec-memsafe)
+endif
+
+output-movec-memsafe: $(OUTPUTS-movec-memsafe)
+
+$(OUTPUTS-movec-memsafe): %/output-movec-memsafe: %/movec-memsafe
+	@$(MAKE) -C $<
+
+run-movec-memsafe: $(RUNS-movec-memsafe)
+
+$(RUNS-movec-memsafe): %/run-movec-memsafe: %/output-movec-memsafe
+	@echo "Running" $(patsubst %/run-movec-memsafe, %, $@)
+	@$(MAKE) -C $(patsubst %/run-movec-memsafe, %/movec-memsafe, $@) run --no-print-directory
+
+clean-movec-memsafe: $(CLEANS-movec-memsafe)
+
+$(CLEANS-movec-memsafe): %/clean-movec-memsafe: %/movec-memsafe
+	@$(MAKE) -C $< clean

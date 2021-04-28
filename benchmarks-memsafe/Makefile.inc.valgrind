@@ -1,0 +1,27 @@
+DIRS-valgrind := $(sort $(patsubst ./%/valgrind,%/,$(shell find . -name valgrind)))
+
+OUTPUTS-valgrind := $(patsubst %/, %/output-valgrind, $(DIRS-valgrind))
+RUNS-valgrind    := $(patsubst %/, %/run-valgrind,    $(DIRS-valgrind))
+CLEANS-valgrind  := $(patsubst %/, %/clean-valgrind,  $(DIRS-valgrind))
+
+.PHONY: output-valgrind run-valgrind $(RUNS-valgrind) clean-valgrind $(CLEANS-valgrind)
+
+ifneq ($(REOUTPUT),)
+.PHONY: $(OUTPUTS-valgrind)
+endif
+
+output-valgrind: $(OUTPUTS-valgrind)
+
+$(OUTPUTS-valgrind): %/output-valgrind: %/valgrind
+	@$(MAKE) -C $<
+
+run-valgrind: $(RUNS-valgrind)
+
+$(RUNS-valgrind): %/run-valgrind: %/output-valgrind
+	@echo "Running" $(patsubst %/run-valgrind, %, $@)
+	@$(MAKE) -C $(patsubst %/run-valgrind, %/valgrind, $@) run --no-print-directory
+
+clean-valgrind: $(CLEANS-valgrind)
+
+$(CLEANS-valgrind): %/clean-valgrind: %/valgrind
+	@$(MAKE) -C $< clean

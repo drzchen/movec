@@ -1,0 +1,12 @@
+For more details, see the paper "Testing Static Analysis Tools Using
+Exploitable Overflows From Open Source Code", Misha Zitser, Richard Lippmann,
+and Tim Leek.
+
+COMPILING
+make clean
+make
+
+RUNNING TEST CASES
+run with:     realpath-ok /tmp/foo/bar/foo/bar/foo/bar/foo/bar/abcdefgh
+result:       resolved does not get overflowed.
+
