@@ -1,9 +1,8 @@
 #!/bin/bash
+# You may use command arguments: O1, O2, O3, clean.
 
-## Set the table file
-TABLE_FILE=$(pwd)/table.csv
-rm -f ${TABLE_FILE}
-export BENCHMARK_TABLE_FILE=${TABLE_FILE}
+## Set the file prefix
+PREF=SARD+memsafe
 
 ## Set the benchmarks to run
 DIRS="SARD-testsuite-81  SARD-testsuite-88  SARD-testsuite-89
@@ -11,13 +10,28 @@ DIRS="SARD-testsuite-81  SARD-testsuite-88  SARD-testsuite-89
 
 ## Set the optimization level, e.g., OPTLVL=-O1, OPTLVL=-O2 or OPTLVL=-O3
 ## The default is empty, i.e., using -O0.
-OPTLVL=
+if [[ $* =~ "O1" ]]; then OPTLVL="-O1"; fi
+if [[ $* =~ "O2" ]]; then OPTLVL="-O2"; fi
+if [[ $* =~ "O3" ]]; then OPTLVL="-O3"; fi
 if [ -n ${OPTLVL} ]; then
     ASAN_OPTS="ASAN_OPTS=${OPTLVL}"
     SOCETS_OPTS="SOCETS_OPTS=${OPTLVL}"
-    VALGRIND_OPTS="O=${OPTLVL}"
-    MOVEC_OPTS="O=${OPTLVL}"
+    VALGRIND_OPTLVL="O=${OPTLVL}"
+    MOVEC_OPTLVL="O=${OPTLVL}"
 fi
+
+## Set the table file
+TABLE_FILE=$(pwd)/table_${PREF}.memsafe${OPTLVL}.csv
+rm -f ${TABLE_FILE}
+export BENCHMARK_TABLE_FILE=${TABLE_FILE}
+## Clean the output files
+for dir in ${DIRS}; do
+    rm -f ${PREF}.${dir}.asan${OPTLVL}
+    rm -f ${PREF}.${dir}.socets${OPTLVL}
+    rm -f ${PREF}.${dir}.valgrind${OPTLVL}
+    rm -f ${PREF}.${dir}.movec-memsafe${OPTLVL}
+done
+if [[ $* =~ "clean" ]]; then exit; fi
 
 ## Write table header
 echo "Suite,Programs,,,ASan ${OPTLVL},,,,SoCets ${OPTLVL},,,,Valgrind ${OPTLVL},,,,Movec ${OPTLVL},,,," >> ${TABLE_FILE};
@@ -32,25 +46,25 @@ for dir in ${DIRS}; do
     ## Run AddressSanitizer
     make ${dir}/clean-addresssanitizer ;
     make ${dir}/output-addresssanitizer ${ASAN_OPTS} ;
-    make ${dir}/run-addresssanitizer ;
+    make ${dir}/run-addresssanitizer > ${PREF}.${dir}.asan${OPTLVL} 2>&1 ;
     make ${dir}/clean-addresssanitizer ;
 
     ## Run Softbound-CETS
     make ${dir}/clean-softboundcets ;
     make ${dir}/output-softboundcets ${SOCETS_OPTS} ;
-    make ${dir}/run-softboundcets ;
+    make ${dir}/run-softboundcets > ${PREF}.${dir}.socets${OPTLVL} 2>&1 ;
     make ${dir}/clean-softboundcets ;
 
     ## Run Valgrind
     make ${dir}/clean-valgrind ;
-    make ${dir}/output-valgrind ${VALGRIND_OPTS} ;
-    make ${dir}/run-valgrind ;
+    make ${dir}/output-valgrind ${VALGRIND_OPTLVL} ;
+    make ${dir}/run-valgrind > ${PREF}.${dir}.valgrind${OPTLVL} 2>&1 ;
     make ${dir}/clean-valgrind ;
 
     ## Run Movec-memsafe
     make ${dir}/clean-movec-memsafe ;
-    make ${dir}/output-movec-memsafe ${MOVEC_OPTS} ;
-    make ${dir}/run-movec-memsafe ;
+    make ${dir}/output-movec-memsafe ${MOVEC_OPTLVL} ;
+    make ${dir}/run-movec-memsafe > ${PREF}.${dir}.movec-memsafe${OPTLVL} 2>&1 ;
     make ${dir}/clean-movec-memsafe ;
 
     echo "" >> ${TABLE_FILE};

@@ -1,6 +1,7 @@
 # The make command can set the following variables, e.g., make "VAR=val".
 # MOVEC_OPTS: options appended to the tool command.
 # ASAN_OPTS: options appended to the tool command.
+# ASAN_ENV: options used in the environment variable ASAN_OPTIONS.
 # SOCETS_OPTS: options appended to the tool command.
 # VALGD_OPTS: options appended to the tool command.
 # O: the optimization level for the default compiler, e.g., O=-O3.
@@ -38,7 +39,8 @@
 
 # Set the path and options of the tools
 MOVEC := movec --check-memsafe $(MOVEC_OPTS)
-ASAN := clang -fsanitize=address -fno-omit-frame-pointer $(ASAN_OPTS)
+ASAN := clang -fsanitize=address -fno-omit-frame-pointer -fno-common -fsanitize-address-use-after-scope $(ASAN_OPTS)
+ASAN_ENV := report_globals=1:replace_str=1:replace_intrin=1:detect_stack_use_after_return=1:detect_leaks=1
 SOCETS := $(HOME)/Downloads/softboundcets-34-master/softboundcets-llvm-clang34/Debug+Asserts/bin/clang -fsoftboundcets -L$(HOME)/Downloads/softboundcets-34-master/softboundcets-lib -lm -lsoftboundcets_rt $(SOCETS_OPTS)
 VALGD := valgrind --leak-check=full $(VALGD_OPTS)
 
@@ -74,10 +76,12 @@ run: $(OUTPUT_FILES)
 $(OUTPUT_FILES): %.output.txt: %
 	@echo "Running" $<
 ifeq ($(SHOWTIME),YES)
-	@/usr/bin/time $(INSTRU_BIN) $< > $@ 2> $<.error.txt
+	@export ASAN_OPTIONS="$(ASAN_ENV)"; \
+	 /usr/bin/time $(INSTRU_BIN) $< > $@ 2> $<.error.txt
 	@../../grep_time_mem.sh $<.error.txt
 else
-	@$(INSTRU_BIN) $< > $@ 2> $<.error.txt
+	@export ASAN_OPTIONS="$(ASAN_ENV)"; \
+	 $(INSTRU_BIN) $< > $@ 2> $<.error.txt
 endif
 else
 # Mode 2: Instrument/compile/run by directory (containing Makefiles).
@@ -103,7 +107,9 @@ $(OUTPUT_DIR): $(INPUT__DIR)
 endif
 
 run: build
-	@export INSTRU_BIN="$(INSTRU_BIN)"; $(MAKE) -C $(OUTPUT_DIR) run
+	@export ASAN_OPTIONS="$(ASAN_ENV)"; \
+	 export INSTRU_BIN="$(INSTRU_BIN)"; \
+	 $(MAKE) -C $(OUTPUT_DIR) run
 	@../../grep_reported_errors.$(TOOLNAME).sh $(ERROR_FILES)
 endif
 

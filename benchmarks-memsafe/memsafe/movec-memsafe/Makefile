@@ -33,7 +33,8 @@ $(OUTPUT_PROGRAMS): $(OUTPUT_DIR)/%: ../src/%.c
 # Additional scripts for comparing with the expected outputs.
 SOURCES_NO_DIFF := \
        all-mem-err/1_up.w.c \
-       all-mem-err/s3_wfv_stdio_printf.c
+       all-mem-err/s3_wfv_stdio_printf.c \
+       all-mem-err/s3_wfv_stdio_printf_2.c
 DIFFS := $(patsubst ../src/%.c, $(OUTPUT_DIR)/%.diff, $(SOURCES))
 
 .PHONY: diff $(DIFFS)

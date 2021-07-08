@@ -1,3 +1,9 @@
+# Error number statistics:
+# 283:1 285:27 287:4 289:2
+# 291:1 293:1  295:1 297:28 299:2
+# 301:3 303:7  305:3 307:1  309:2
+# TOTAL: 83
+
 MAKDIRS := $(sort $(patsubst %/Makefile, %, $(wildcard */Makefile)))
 MAKDIRS_BUILDS := $(patsubst %, %/all, $(MAKDIRS))
 MAKDIRS_RUNS   := $(patsubst %, %/run, $(MAKDIRS))

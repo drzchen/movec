@@ -14,6 +14,8 @@ do
   elapsed=${elapsed##*"system "}
   # Convert to seconds.
   seconds=$(echo ${elapsed} | awk -F: '{ if (NF == 1) {print $NF} else if (NF == 2) {print $1 * 60 + $2} else if (NF==3) {print $1 * 3600 + $2 * 60 + $3} }')
+  # Convert 0 second to 0.01 second due to the precision limit.
+  if [ "${seconds}" = "0" ]; then seconds=0.01; fi
   # Sum up the seconds.
   time=$(echo "${time} + ${seconds}" | awk -F+ '{ print $1 + $2 }')
 
