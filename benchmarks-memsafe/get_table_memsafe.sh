@@ -2,11 +2,11 @@
 # You may use command arguments: O1, O2, O3, clean.
 
 ## Set the file prefix
-PREF=SARD+memsafe
+PREF=SARD+msbench
 
 ## Set the benchmarks to run
 DIRS="SARD-testsuite-81  SARD-testsuite-88  SARD-testsuite-89
-      SARD-testsuite-89-2  memsafe"
+      SARD-testsuite-89-2  msbench"
 
 ## Set the optimization level, e.g., OPTLVL=-O1, OPTLVL=-O2 or OPTLVL=-O3
 ## The default is empty, i.e., using -O0.

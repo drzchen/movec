@@ -1,0 +1,29 @@
+OUTPUTS-softboundcets := $(patsubst %.c, %/output-softboundcets, $(SOURCES))
+RUNS-softboundcets    := $(patsubst %.c, %/run-softboundcets,    $(SOURCES))
+CLEANS-softboundcets  := $(patsubst %.c, %/clean-softboundcets,  $(SOURCES))
+PROGRMS-softboundcets := $(patsubst %.c, output-softboundcets/%, $(SOURCES))
+OUTTXTS-softboundcets := $(patsubst %.c, output-softboundcets/%.output.txt, $(SOURCES))
+
+.PHONY: output-softboundcets $(OUTPUTS-softboundcets) run-softboundcets $(RUNS-softboundcets) clean-softboundcets $(CLEANS-softboundcets)
+
+output-softboundcets: $(OUTPUTS-softboundcets)
+	@echo "***Successfully instrumented and built all benchmarks."
+
+$(OUTPUTS-softboundcets): %/output-softboundcets: output-softboundcets/%
+
+$(PROGRMS-softboundcets): output-softboundcets/%: src/%.c
+	@$(MAKE) -C softboundcets $(patsubst %, ../%, $@) --no-print-directory
+
+run-softboundcets: $(RUNS-softboundcets)
+	@echo "***Successfully ran all benchmarks."
+
+$(RUNS-softboundcets): %/run-softboundcets: output-softboundcets/%.output.txt
+
+$(OUTTXTS-softboundcets): output-softboundcets/%.output.txt: output-softboundcets/%
+	@$(MAKE) -C softboundcets $(patsubst %, ../%, $@) --no-print-directory
+
+clean-softboundcets:
+	@$(MAKE) -C softboundcets clean --no-print-directory
+
+$(CLEANS-softboundcets):
+	@$(MAKE) -C softboundcets $(patsubst %-softboundcets, %, $@) --no-print-directory

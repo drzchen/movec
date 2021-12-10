@@ -1,0 +1,29 @@
+OUTPUTS-valgrind := $(patsubst %.c, %/output-valgrind, $(SOURCES))
+RUNS-valgrind    := $(patsubst %.c, %/run-valgrind,    $(SOURCES))
+CLEANS-valgrind  := $(patsubst %.c, %/clean-valgrind,  $(SOURCES))
+PROGRMS-valgrind := $(patsubst %.c, output-valgrind/%, $(SOURCES))
+OUTTXTS-valgrind := $(patsubst %.c, output-valgrind/%.output.txt, $(SOURCES))
+
+.PHONY: output-valgrind $(OUTPUTS-valgrind) run-valgrind $(RUNS-valgrind) clean-valgrind $(CLEANS-valgrind)
+
+output-valgrind: $(OUTPUTS-valgrind)
+	@echo "***Successfully instrumented and built all benchmarks."
+
+$(OUTPUTS-valgrind): %/output-valgrind: output-valgrind/%
+
+$(PROGRMS-valgrind): output-valgrind/%: src/%.c
+	@$(MAKE) -C valgrind $(patsubst %, ../%, $@) --no-print-directory
+
+run-valgrind: $(RUNS-valgrind)
+	@echo "***Successfully ran all benchmarks."
+
+$(RUNS-valgrind): %/run-valgrind: output-valgrind/%.output.txt
+
+$(OUTTXTS-valgrind): output-valgrind/%.output.txt: output-valgrind/%
+	@$(MAKE) -C valgrind $(patsubst %, ../%, $@) --no-print-directory
+
+clean-valgrind:
+	@$(MAKE) -C valgrind clean --no-print-directory
+
+$(CLEANS-valgrind):
+	@$(MAKE) -C valgrind $(patsubst %-valgrind, %, $@) --no-print-directory

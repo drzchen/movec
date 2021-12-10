@@ -1,0 +1,29 @@
+OUTPUTS-movec-memsafe := $(patsubst %.c, %/output-movec-memsafe, $(SOURCES))
+RUNS-movec-memsafe    := $(patsubst %.c, %/run-movec-memsafe,    $(SOURCES))
+CLEANS-movec-memsafe  := $(patsubst %.c, %/clean-movec-memsafe,  $(SOURCES))
+PROGRMS-movec-memsafe := $(patsubst %.c, output-movec-memsafe/%, $(SOURCES))
+OUTTXTS-movec-memsafe := $(patsubst %.c, output-movec-memsafe/%.output.txt, $(SOURCES))
+
+.PHONY: output-movec-memsafe $(OUTPUTS-movec-memsafe) run-movec-memsafe $(RUNS-movec-memsafe) clean-movec-memsafe $(CLEANS-movec-memsafe)
+
+output-movec-memsafe: $(OUTPUTS-movec-memsafe)
+	@echo "***Successfully instrumented and built all benchmarks."
+
+$(OUTPUTS-movec-memsafe): %/output-movec-memsafe: output-movec-memsafe/%
+
+$(PROGRMS-movec-memsafe): output-movec-memsafe/%: src/%.c
+	@$(MAKE) -C movec-memsafe $(patsubst %, ../%, $@) --no-print-directory
+
+run-movec-memsafe: $(RUNS-movec-memsafe)
+	@echo "***Successfully ran all benchmarks."
+
+$(RUNS-movec-memsafe): %/run-movec-memsafe: output-movec-memsafe/%.output.txt
+
+$(OUTTXTS-movec-memsafe): output-movec-memsafe/%.output.txt: output-movec-memsafe/%
+	@$(MAKE) -C movec-memsafe $(patsubst %, ../%, $@) --no-print-directory
+
+clean-movec-memsafe:
+	@$(MAKE) -C movec-memsafe clean --no-print-directory
+
+$(CLEANS-movec-memsafe):
+	@$(MAKE) -C movec-memsafe $(patsubst %-movec-memsafe, %, $@) --no-print-directory

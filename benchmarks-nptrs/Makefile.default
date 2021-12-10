@@ -1,0 +1,92 @@
+# The make command can set the following variables, e.g., make "VAR=val".
+# MOVEC_OPTS: options appended to the tool command.
+# ASAN_OPTS: options appended to the tool command.
+# ASAN_ENV: options used in the environment variable ASAN_OPTIONS.
+# SOCETS_OPTS: options appended to the tool command.
+# VALGD_OPTS: options appended to the tool command.
+# O: the optimization level for the default compiler, e.g., O=-O3.
+
+# The parent Makefile can set the following variables:
+# TOOLNAME: the name of the tool being used.
+#   This is also the name of the generated output directory.
+# INSTRU_CC: the compiler used to build instrumented programs.
+#   It should be set if you want to use a compile-time instrumentation.
+#   It can be omitted if you use the default compiler - gcc.
+# INSTRU_CC_OPTS: options appended to the compiler command.
+# INSTRU_BIN: the tool used to instrument and run binary programs.
+#   It should be set if you want to use a run-time instrumentation.
+#   It can be omitted if you do not need it.
+#
+# We provide file-to-file instrumentation, i.e., instrument/compile/run
+# source files one by one.
+# Different variables should be set in the parent Makefile.
+# SOURCES: the source files to be instrumented.
+# OUTPUT_PROGRAMS: the tagets to generate a program from a source file.
+#   Note that all details of these targets should be given in the parent Makefile.
+# SHOWTIME: set value YES to show the time of running a program.
+#   It can be omitted if you do not need it.
+
+# Set the path and options of the tools
+MOVEC := movec --check-memsafe $(MOVEC_OPTS)
+ASAN := clang -fsanitize=address -fno-omit-frame-pointer -fno-common -fsanitize-address-use-after-scope $(ASAN_OPTS)
+ASAN_ENV := report_globals=1:replace_str=1:replace_intrin=1:detect_stack_use_after_return=1:detect_leaks=1
+SOCETS := $(HOME)/Downloads/softboundcets-34-master/softboundcets-llvm-clang34/Debug+Asserts/bin/clang -fsoftboundcets -L$(HOME)/Downloads/softboundcets-34-master/softboundcets-lib -lm -lsoftboundcets_rt $(SOCETS_OPTS)
+VALGD := valgrind --leak-check=full $(VALGD_OPTS)
+
+COPY := cp
+MKDIR := mkdir
+RMRF := rm -rf
+
+INPUT__DIR := ../src
+OUTPUT_DIR := ../output-$(TOOLNAME)
+INSTRU_CC ?= gcc $(O)
+
+CLEANS := $(patsubst ../src/%.c, %/clean, $(SOURCES))
+.PHONY: build run clean $(CLEANS)
+.SUFFIXES: # Delete the default suffixes
+
+OUTPUT_PROGRAMS := $(patsubst ../src/%.c, $(OUTPUT_DIR)/%, $(SOURCES))
+OUTPUT_FILES := $(patsubst ../src/%.c, $(OUTPUT_DIR)/%.output.txt, $(SOURCES))
+
+.IGNORE: $(patsubst ../src/%.c, $(OUTPUT_DIR)/%.output.txt, $(SOURCES))
+
+build: $(OUTPUT_DIR) $(OUTPUT_PROGRAMS)
+	@echo "***Successfully instrumented and built all benchmarks."
+
+$(OUTPUT_DIR):
+	@$(RMRF) $(OUTPUT_DIR)
+	@$(MKDIR) $(OUTPUT_DIR)
+
+run: $(OUTPUT_FILES)
+	@echo "***Successfully ran all benchmarks."
+
+$(OUTPUT_FILES): %.output.txt: %
+	@echo "Running" $<
+ifeq ($(SHOWTIME),YES)
+	@if [ -z "$${BENCHMARK_RUN_TIMES}" ]; then \
+	     export BENCHMARK_COUNT_DOWN=1; \
+	 else \
+	     export BENCHMARK_COUNT_DOWN="$${BENCHMARK_RUN_TIMES}"; \
+	     echo "==== Run $${BENCHMARK_RUN_TIMES} times ===="; \
+	 fi; \
+	 while [ $${BENCHMARK_COUNT_DOWN} -ge 1 ]; do \
+	     export ASAN_OPTIONS="$(ASAN_ENV)"; \
+	     /usr/bin/time $(INSTRU_BIN) $< > $@ 2> $<.error.txt; \
+	     ../grep_time_mem.sh $<.error.txt; \
+	     export BENCHMARK_COUNT_DOWN=`expr $${BENCHMARK_COUNT_DOWN} - 1`; \
+	 done;
+	@../grep_reported_errors.$(TOOLNAME).sh $<.error.txt
+else
+	@export ASAN_OPTIONS="$(ASAN_ENV)"; \
+	 $(INSTRU_BIN) $< > $@ 2> $<.error.txt
+	@../grep_reported_errors.$(TOOLNAME).sh $<.error.txt
+endif
+
+clean:
+	@$(RMRF) $(OUTPUT_DIR)
+
+$(CLEANS):
+	@$(RM) -f $(patsubst %/clean, $(OUTPUT_DIR)/%.error.txt, $@)
+	@$(RM) -f $(patsubst %/clean, $(OUTPUT_DIR)/%.output.txt, $@)
+	@$(RM) -f $(patsubst %/clean, $(OUTPUT_DIR)/%, $@)
+	@$(RM) -f $(patsubst %/clean, $(OUTPUT_DIR)/%.c, $@)

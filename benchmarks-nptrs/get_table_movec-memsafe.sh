@@ -25,11 +25,14 @@ function get_column()
 }
 
 ## Set the file prefix
-PREF=SARD+msbench
+PREF=nptrs
 
 ## Set the benchmarks to run
-DIRS="SARD-testsuite-81  SARD-testsuite-88  SARD-testsuite-89
-      SARD-testsuite-89-2  msbench"
+SRCS=$(ls src/*.c)       # a list of source files
+for src in ${SRCS}; do
+    src=${src#src/}
+    DIRS="${DIRS} ${src%.c}"
+done
 
 ## Set the optimization level, e.g., OPTLVL=-O1, OPTLVL=-O2 or OPTLVL=-O3
 ## The default is empty, i.e., using -O0.
@@ -64,23 +67,22 @@ TABLE_FILE=$(pwd)/table_${PREF}.movec-memsafe${OPTLVL}.csv
 rm -f ${TABLE_FILE}
 export BENCHMARK_TABLE_FILE=${TABLE_FILE}
 ## Clean the output files
-for dir in ${DIRS}; do
-    for(( i=0;i<${#OPTIONNAME[@]};i++ )) do
-        rm -f ${PREF}.${dir}.movec-memsafe-${OPTIONNAME[i]}${OPTLVL}
-    done
+rm -f ${PREF}.original-O3
+for(( i=0;i<${#OPTIONNAME[@]};i++ )) do
+    rm -f ${PREF}.movec-memsafe-${OPTIONNAME[i]}${OPTLVL}
 done
 if [[ $* =~ "clean" ]]; then exit; fi
 
 ## Write table header
-echo -n "Suite," >> ${TABLE_FILE};
+echo -n "Programs,Original -O3,," >> ${TABLE_FILE};
 for(( i=0;i<${#OPTIONNAME[@]};i++ )) do
-    echo -n "Movec ${OPTIONNAME[i]}${OPTLVL},,,," >> ${TABLE_FILE};
+    echo -n "Movec ${OPTIONNAME[i]}${OPTLVL},,,,," >> ${TABLE_FILE};
 done
 echo "" >> ${TABLE_FILE};
 
-echo -n "Name," >> ${TABLE_FILE};
+echo -n ",time,mem," >> ${TABLE_FILE};
 for(( i=0;i<${#OPTIONNAME[@]};i++ )) do
-    echo -n "E,G,N,G," >> ${TABLE_FILE};
+    echo -n "time,mem,error,T.R.,M.R.," >> ${TABLE_FILE};
 done
 echo "" >> ${TABLE_FILE};
 
@@ -90,26 +92,38 @@ for dir in ${DIRS}; do
     line=`expr $line + 1`;
     echo -n "${dir}," >> ${TABLE_FILE};
 
+    ## Run original -O3
+    make ${dir}/clean ;
+    make ${dir}/build ;
+    make ${dir}/run >> ${PREF}.original-O3 2>&1 ;
+    make ${dir}/clean ;
+
     ## Run Movec-memsafe
-  column=1
+  column=3
   for(( i=0;i<${#OPTIONNAME[@]};i++ )) do
     make ${dir}/clean-movec-memsafe ;
     make ${dir}/output-movec-memsafe MOVEC_OPTS="${MOVEC_OPTS[i]}" ${MOVEC_OPTLVL} ;
-    make ${dir}/run-movec-memsafe > ${PREF}.${dir}.movec-memsafe-${OPTIONNAME[i]}${OPTLVL} 2>&1 ;
+    make ${dir}/run-movec-memsafe >> ${PREF}.movec-memsafe-${OPTIONNAME[i]}${OPTLVL} 2>&1 ;
     make ${dir}/clean-movec-memsafe ;
+    column=`expr $column + 1`;
+    column1=$(get_column $column)
+    column=`expr $column + 1`;
+    column2=$(get_column $column)
+    column=`expr $column + 3`;
+    echo -n "\"=ROUND(${column1}${line}/B${line},2)\",\"=ROUND(${column2}${line}/C${line},2)\"," >> ${TABLE_FILE};
   done
 
-     echo "" >> ${TABLE_FILE};
+    echo "" >> ${TABLE_FILE};
 done
 
 ## Write table
 echo "" >> ${TABLE_FILE};
-echo -n "Total," >> ${TABLE_FILE};
-column=1
+echo -n "AVERAGE,,," >> ${TABLE_FILE};
+column=3
 for(( i=0;i<${#OPTIONNAME[@]};i++ )) do
-    for(( j=0;j<4;j++ )) do
-        column=`expr $column + 1`;
-        column1=$(get_column $column)
-        echo -n "=SUM(${column1}3:${column1}${line})," >> ${TABLE_FILE};
-    done
+    column=`expr $column + 4`;
+    column1=$(get_column $column)
+    column=`expr $column + 1`;
+    column2=$(get_column $column)
+    echo -n ",,,\"=ROUND(AVERAGE(${column1}3:${column1}${line}),2)\",\"=ROUND(AVERAGE(${column2}3:${column2}${line}),2)\"," >> ${TABLE_FILE};
 done

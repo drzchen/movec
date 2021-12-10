@@ -1,0 +1,29 @@
+OUTPUTS-addresssanitizer := $(patsubst %.c, %/output-addresssanitizer, $(SOURCES))
+RUNS-addresssanitizer    := $(patsubst %.c, %/run-addresssanitizer,    $(SOURCES))
+CLEANS-addresssanitizer  := $(patsubst %.c, %/clean-addresssanitizer,  $(SOURCES))
+PROGRMS-addresssanitizer := $(patsubst %.c, output-addresssanitizer/%, $(SOURCES))
+OUTTXTS-addresssanitizer := $(patsubst %.c, output-addresssanitizer/%.output.txt, $(SOURCES))
+
+.PHONY: output-addresssanitizer $(OUTPUTS-addresssanitizer) run-addresssanitizer $(RUNS-addresssanitizer) clean-addresssanitizer $(CLEANS-addresssanitizer)
+
+output-addresssanitizer: $(OUTPUTS-addresssanitizer)
+	@echo "***Successfully instrumented and built all benchmarks."
+
+$(OUTPUTS-addresssanitizer): %/output-addresssanitizer: output-addresssanitizer/%
+
+$(PROGRMS-addresssanitizer): output-addresssanitizer/%: src/%.c
+	@$(MAKE) -C addresssanitizer $(patsubst %, ../%, $@) --no-print-directory
+
+run-addresssanitizer: $(RUNS-addresssanitizer)
+	@echo "***Successfully ran all benchmarks."
+
+$(RUNS-addresssanitizer): %/run-addresssanitizer: output-addresssanitizer/%.output.txt
+
+$(OUTTXTS-addresssanitizer): output-addresssanitizer/%.output.txt: output-addresssanitizer/%
+	@$(MAKE) -C addresssanitizer $(patsubst %, ../%, $@) --no-print-directory
+
+clean-addresssanitizer:
+	@$(MAKE) -C addresssanitizer clean --no-print-directory
+
+$(CLEANS-addresssanitizer):
+	@$(MAKE) -C addresssanitizer $(patsubst %-addresssanitizer, %, $@) --no-print-directory

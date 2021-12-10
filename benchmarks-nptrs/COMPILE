@@ -1,0 +1,69 @@
+This document explains how to compile/instrument/run all benchmarks or one selected benchmark.
+More detailed information can be found in the Makefiles and shell scripts.
+
+# Compile/instrument/run all benchmarks
+
+You can compile/run all the benchmarks in this directory using one make command.
+The targets that can be used in the make command are listed as follows.
+
+- build (the default target): build the original benchmarks.
+- run: run the original benchmarks.
+- clean: clean the original benchmarks.
+
+You can instrument/run all the benchmarks in this directory using one make command.
+The targets that can be used in the make command are listed as follows.
+Note that the suffix indicates the instrumentation tool being used.
+The full path and options of the instrumentation tool should be set in
+the file "Makefile.default" (at the first lines after comments).
+
+- output-movec-memsafe: build the instrumented benchmarks using our tool.
+    You can use "O=-O3" to choose a different optimization level.
+    You can use "MOVEC_OPTS=--ms-abort" to make the program abort on the first detected error.
+    You can use "MOVEC_OPTS=--ms-hashtbl" to make the program use hash tables for storing pmds.
+    You can use "MOVEC_OPTS=--ms-no-check" to make the program not perform checks while pass pmds.
+    You can use "MOVEC_OPTS=--ms-no-pmd-var" to make the program not use pmd variables.
+    Note that the above options can be used together, e.g.,
+      make output-movec-memsafe MOVEC_OPTS="--ms-hashtbl --ms-no-check" O=-O3
+- run-movec-memsafe: run the instrumented benchmarks.
+- clean-movec-memsafe: clean the instrumented benchmarks.
+
+- output-addresssanitizer
+    You can use "ASAN_OPTS=-O3" to choose a different optimization level.
+- run-addresssanitizer
+- clean-addresssanitizer
+
+- output-softboundcets
+    You can use "SOCETS_OPTS=-O3" to choose a different optimization level.
+- run-softboundcets
+- clean-softboundcets
+
+- output-valgrind
+    You can use "O=-O3" to choose a different optimization level.
+- run-valgrind
+- clean-valgrind
+
+# Compile/instrument/run one benchmark
+
+You can compile/instrument/run one benchmark using its name (e.g., BENCHMARK) in the make command.
+The targets that can be used in the make command are listed as follows.
+The make options mentioned above also apply.
+
+- BENCHMARK/build
+- BENCHMARK/run
+- BENCHMARK/clean
+
+- BENCHMARK/output-movec-memsafe
+- BENCHMARK/run-movec-memsafe
+- BENCHMARK/clean-movec-memsafe
+
+- BENCHMARK/output-addresssanitizer
+- BENCHMARK/run-addresssanitizer
+- BENCHMARK/clean-addresssanitizer
+
+- BENCHMARK/output-softboundcets
+- BENCHMARK/run-softboundcets
+- BENCHMARK/clean-softboundcets
+
+- BENCHMARK/output-valgrind
+- BENCHMARK/run-valgrind
+- BENCHMARK/clean-valgrind

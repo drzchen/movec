@@ -2,7 +2,7 @@
 # 1. Search for all sub-directories.
 DIRS := $(sort $(shell ls -d */))
 # 2. Designate a set of sub-directories.
-# DIRS := memsafe/ SARD-testsuite-81/
+# DIRS := msbench/ SARD-testsuite-81/
 
 BUILDS := $(patsubst %/, %/build, $(DIRS))
 RUNS   := $(patsubst %/, %/run,   $(DIRS))

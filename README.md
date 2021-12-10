@@ -4,27 +4,26 @@ THE MOVEC PROJECT - Artifact - README
 Copyright (C) Zhe Chen.
 All rights reserved.
 
-Movec is a stand-alone tool that implements the Smatus (short for smart status) dynamic analysis approach and a source-level instrumentation framework, which transforms a C source file into an instrumented C source file that can be compiled by a standard C compiler such as gcc.
+Movec is a stand-alone dynamic analysis tool that implements a smart-status-based monitoring algorithm (called Smatus) and a source-level instrumentation framework, which transforms a C source file to an instrumented C source file that can be compiled by a standard C compiler such as gcc.
 This document presents step-by-step instructions on how to run Movec on the associated benchmark suites.
 
 # 1. Getting Started
 
 This section demonstrates how to set up the artifact and validate its general functionality (e.g., based on a small example) in less than 30 min.
 
-This artifact contains the following sub-directories (some of which may be separately downloaded):
+This artifact contains the following sub-directories:
 
 * bin: It contains the binary executable file of Movec.
 * examples: It contains some small examples for testing Movec.
-* benchmarks-memsafe: It contains the SARD and memsafe benchmark suites.
-* benchmarks-nptrs: It contains the nptrs benchmark suite.
+* benchmarks-memsafe: It contains the SARD and MSBench benchmark suites.
+* benchmarks-nptrs: It contains the Nptrs benchmark suite.
+
+The following benchmark suites, mentioned in our papers, can be separately downloaded at [Movec-benchmarks](https://github.com/drzchen/movec-benchmarks).
+
 * benchmarks-mibench: It contains the MiBench benchmark suite.
-    Available at an URL given at HotCRP and its website.
 * benchmarks-mibench-safer: A safer version of the MiBench benchmark suite.
-    Available at an URL given at HotCRP.
 * benchmarks-spec-cpu-2017: It contains the SPEC CPU 2017 benchmark suite.
-    Available at an URL given at HotCRP and its website.
 * benchmarks-spec-cpu-2017-safer: A safer version of the SPEC CPU 2017 benchmark suite.
-    Available at an URL given at HotCRP.
 
 Note that ASan, SoCets and Valgrind (Sections 1.3, 1.4 and 1.5 below) are NOT required for the running/evaluation of Movec, but only used for comparison. If you only need to run/evaluate Movec, or you fail to install them on your system, you can safely skip them.
 
@@ -183,12 +182,12 @@ This section describes how to validate the paper’s claims and results in detai
 
 ## 2.1 Setting the Benchmark Suites
 
-The directory of each benchmark suite (e.g., SARD+memsafe, nptrs, MiBench, SPEC) contains several files. Please read the following files:
+The directory of each benchmark suite (e.g., SARD+MSBench, Nptrs, MiBench, SPEC) contains several files. Please read the following files:
 
-* Makefile.default.TOOL (or Makefile.default for SARD+memsafe and nptrs): It contains the script for running the TOOL on a benchmark program. Note that you should correctly set the path of the TOOL's executable file at the beginning lines of this file (after comments).
+* Makefile.default.TOOL (or Makefile.default for SARD+MSBench and Nptrs): It contains the script for running the TOOL on a benchmark program. Note that you should correctly set the path of the TOOL's executable file at the beginning lines of this file (after comments).
 * COMPILE: It explains how to compile/instrument/run all benchmarks or one selected benchmark. You should follow the instructions in this file to run the tools.
 
-The directory of each benchmark suite (e.g., SARD+memsafe, MiBench, SPEC) contains several sub-directories. Each sub-directory contains a benchmark program (but multiple programs for SARD+memsafe). The directory of each benchmark program also contains several sub-directories:
+The directory of each benchmark suite (e.g., SARD+MSBench, MiBench, SPEC) contains several sub-directories. Each sub-directory contains a benchmark program (but multiple programs for SARD+MSBench). The directory of each benchmark program also contains several sub-directories:
 
 * src: It contains the original source code of the program.
 * movec-memsafe: It contains the Makefile for running Movec on the program.
@@ -200,19 +199,19 @@ You can compile/run all the benchmarks in a suite's directory using one make com
 ```Bash
     $ cd benchmarks-xxx [xxx may be memsafe, nptrs, mibench or spec-cpu-2017]
     $ make build [time: ~1, 1, 1 or 3 min, respectively]
-    $ make run   [for SARD+memsafe and nptrs, time: ~1 min]
+    $ make run   [for SARD+MSBench and Nptrs, time: ~1 min]
     $ make large [for MiBench, time: ~5 sec]
     $ make test  [for SPEC, time: ~2 min]
     $ make clean [this is obligatory if you will try another tool]
 ```
 The second command above compiles all source files. The generated executable files are in the same directory as the source files. The third, fourth and fifth commands run the executable files on different inputs for different benchmark suites. A summary of the time and memory consumption may be printed after the execution of each benchmark. The last command cleans the source directory.
-Note that if your system fails on a benchmark program, then you can remove its directory (or remove its source file for a program in SARD+memsafe and nptrs) to exclude the program from build and run.
+Note that if your system fails on a benchmark program, then you can remove its directory (or remove its source file for a program in SARD+MSBench and Nptrs) to exclude the program from build and run.
 
 You can compile/run one benchmark using its name (e.g., BENCHMARK) in the make command. Change directory to where you place the benchmark suite.
 ```Bash
     $ cd benchmarks-xxx [xxx may be memsafe, nptrs, mibench or spec-cpu-2017]
     $ make BENCHMARK/build
-    $ make BENCHMARK/run   [for SARD+memsafe and nptrs]
+    $ make BENCHMARK/run   [for SARD+MSBench and Nptrs]
     $ make BENCHMARK/large [for MiBench]
     $ make BENCHMARK/test  [for SPEC]
     $ make BENCHMARK/clean [this is obligatory if you will try another tool]
@@ -224,20 +223,20 @@ You can instrument/compile/run all the benchmarks in a suite's directory using o
 ```Bash
     $ cd benchmarks-xxx [xxx may be memsafe, nptrs, mibench or spec-cpu-2017]
     $ make output-movec-memsafe [time: ~10, 5, 3 or 5 min, respectively]
-    $ make run-movec-memsafe    [for SARD+memsafe and nptrs, time: ~10 min]
+    $ make run-movec-memsafe    [for SARD+MSBench and Nptrs, time: ~10 min]
     $ make large-movec-memsafe  [for MiBench, time: ~1 min]
     $ make test-movec-memsafe   [for SPEC, time: ~60 min]
     $ make clean-movec-memsafe  [this is obligatory if you will try another tool]
 ```
 The second command above instruments and then compiles all source files. The instrumented source files and the generated executable files are in an output directory, i.e., the output-movec-memsafe sub-directory in each benchmark's directory. The third, fourth and fifth commands run the instrumented programs on different inputs for different benchmark suites. The detected errors (if any) are reported in the output files in the output directories. A summary of the time and memory consumption, as well as the detected errors, may be printed after the execution of each benchmark. The last command cleans the output directories.
-Note that if your system fails on a benchmark program, then you can remove its directory (or remove its source file for a program in SARD+memsafe and nptrs) to exclude the program from instrumentation, build and run.
+Note that if your system fails on a benchmark program, then you can remove its directory (or remove its source file for a program in SARD+MSBench and Nptrs) to exclude the program from instrumentation, build and run.
 
 Note that the above instructions compile the instrumented programs with compiler optimizations turned off. If you would like to turn on a more aggressive optimization level (such as -O3) or other options, please refer to the COMPILE file.
 For example, let us try the -O3 level.
 ```Bash
     $ cd benchmarks-xxx [xxx may be memsafe, nptrs, mibench or spec-cpu-2017]
     $ make output-movec-memsafe O=-O3
-    $ make run-movec-memsafe O=-O3    [for SARD+memsafe and nptrs]
+    $ make run-movec-memsafe O=-O3    [for SARD+MSBench and Nptrs]
     $ make large-movec-memsafe O=-O3  [for MiBench]
     $ make test-movec-memsafe O=-O3   [for SPEC]
     $ make clean-movec-memsafe [this is obligatory if you will try another tool]
@@ -247,7 +246,7 @@ You can instrument/compile/run one benchmark using its name (e.g., BENCHMARK) in
 ```Bash
     $ cd benchmarks-xxx [xxx may be memsafe, nptrs, mibench or spec-cpu-2017]
     $ make BENCHMARK/output-movec-memsafe
-    $ make BENCHMARK/run-movec-memsafe    [for SARD+memsafe and nptrs]
+    $ make BENCHMARK/run-movec-memsafe    [for SARD+MSBench and Nptrs]
     $ make BENCHMARK/large-movec-memsafe  [for MiBench]
     $ make BENCHMARK/test-movec-memsafe   [for SPEC]
     $ make BENCHMARK/clean-movec-memsafe  [this is obligatory if you will try another tool]
@@ -258,7 +257,7 @@ For example, let us try the -O3 level.
 ```Bash
     $ cd benchmarks-xxx [xxx may be memsafe, nptrs, mibench or spec-cpu-2017]
     $ make BENCHMARK/output-movec-memsafe O=-O3
-    $ make BENCHMARK/run-movec-memsafe O=-O3    [for SARD+memsafe and nptrs]
+    $ make BENCHMARK/run-movec-memsafe O=-O3    [for SARD+MSBench and Nptrs]
     $ make BENCHMARK/large-movec-memsafe O=-O3  [for MiBench]
     $ make BENCHMARK/test-movec-memsafe O=-O3   [for SPEC]
     $ make BENCHMARK/clean-movec-memsafe [this is obligatory if you will try another tool]
@@ -277,7 +276,7 @@ The other tools, i.e., ASan, SoCets and Valgrind, can be run in a similar way to
 ```Bash
     $ cd benchmarks-xxx [xxx may be memsafe, nptrs, mibench or spec-cpu-2017]
     $ make output-addresssanitizer
-    $ make run-addresssanitizer    [for SARD+memsafe and nptrs]
+    $ make run-addresssanitizer    [for SARD+MSBench and Nptrs]
     $ make large-addresssanitizer  [for MiBench]
     $ make test-addresssanitizer   [for SPEC]
     $ make clean-addresssanitizer  [this is obligatory if you will try another tool]
@@ -294,13 +293,15 @@ The shell script `get_table_movec-memsafe.sh` can generate a result table contai
 
 Here are some notes:
 
-* Note that if your system fails on a benchmark program, then you can remove its directory name from the directory list DIRS in `get_table_memsafe.sh` (or remove its source file for a program in SARD+memsafe and nptrs) to exclude the program from instrumentation, build and run.
+* Note that if your system fails on a benchmark program, then you can remove its directory name from the directory list DIRS in `get_table_memsafe.sh` (or remove its source file for a program in SARD+MSBench and Nptrs) to exclude the program from instrumentation, build and run.
 * You can set a different compiler optimization level by passing the argument `O1`, `O2` or `O3` to the shell script, e.g., `./get_table_memsafe.sh O3`.
 * You can set the Movec options using the variable `MOVEC_OPTS` in `get_table_movec-memsafe.sh`.
 
-For SARD+memsafe and nptrs, running the script costs about 100 minutes. Note that the number of false positives reported by SoCets on good programs (represented by a negative number in Table 1 of the paper) should be subtracted from the number of the (good) programs with errors detected.
+For SARD+MSBench, running the script costs about 100 minutes. Note that the number of false positives reported by SoCets on good programs (represented by a negative number in the table of the paper) should be subtracted from the number of the (good) programs with errors detected.
 
-For MiBench, running the script costs about 20 minutes. Note that the data of aborted runs should be manually removed from the table as using these small numbers is unfair.
+For Nptrs, running the script costs about 20 minutes.
+
+For MiBench, running the script costs about 60 minutes. Note that the data of aborted runs should be manually removed from the table as using these small numbers is unfair.
 
 For SPEC, running the script costs about 4 hours.
 
@@ -316,7 +317,7 @@ This artifact is reusable as it satisfies the following requirements.
 
 1\. The artifact is highly automated and easy to use.
 
-Movec is highly automated and easy to use, as a single command can finish instrumentation, as introduced in Section 1.2 (above), and the process of compiling the instrumented files is the same as that of compiling the original source files. The benchmarks are also highly automated, as a single make command can finish the evaluation of a tool and report the result, and the `get_table.sh` script can finish the evaluation of all tools and generate a result table.
+Movec is highly automated and easy to use, as a single command can finish instrumentation, as introduced in Section 1.2 (above), and the process of compiling the instrumented files is the same as that of compiling the original source files. The benchmarks are also highly automated, as a single make command can finish the evaluation of a tool and report the result, and the `get_table_memsafe.sh` script can finish the evaluation of all tools and generate a result table.
 
 2\. The README describes use case scenarios and details beyond the scope of the paper, e.g., how the artifact could be used and evaluated more generally.
 
