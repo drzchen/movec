@@ -1,0 +1,35 @@
+monitor mon
+{
+  pointcut get_v(x) = get(% v : x);
+
+  advice advb1(a) before get_v(a) {
+    printf("before 1.");
+  }
+
+  advice adva1(a) after get_v(a) {
+    printf("after 1.\n");
+  }
+
+  advice advr1(a) around get_v(a) {
+    printf("around 1.");
+    proceed();
+  }
+
+  advice advb2(a) before get_v(a) {
+    printf("before 2.");
+  }
+
+  advice adva2(a) after get_v(a) {
+    printf("after 2.");
+  }
+
+  advice advr2(a) around get_v(a) {
+    printf("around 2.");
+    proceed();
+  }
+
+  advice advr3(a) around get_v(a) {
+    printf("around 3.");
+    proceed();
+  }
+};

@@ -1,0 +1,35 @@
+monitor mon
+{
+  pointcut call_f(a,b) = call(% f(% s : a, % i : b));
+
+  advice advb1(a1, b1) before call_f(a1, b1) {
+    printf("before 1.");
+  }
+
+  advice adva1(a1, b1) after call_f(a1, b1) {
+    printf("after 1.\n");
+  }
+
+  advice advr1(a1, b1) around call_f(a1, b1) {
+    printf("around 1.");
+    proceed();
+  }
+
+  advice advb2(a1, b1) before call_f(a1, b1) {
+    printf("before 2.");
+  }
+
+  advice adva2(a1, b1) after call_f(a1, b1) {
+    printf("after 2.");
+  }
+
+  advice advr2(a1, b1) around call_f(a1, b1) {
+    printf("around 2.");
+    proceed();
+  }
+
+  advice advr3(a1, b1) around call_f(a1, b1) {
+    printf("around 3.");
+    proceed();
+  }
+};
